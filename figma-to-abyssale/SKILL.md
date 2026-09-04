@@ -162,7 +162,16 @@ unavailable Figma font.
 - `layout.<format>.x/y/width/height` must be **integers** — round everything, `wrong_type` error otherwise.
 - Colors: `#RRGGBB`/`#RRGGBBAA` hex only (or gradient/cmyk objects) — never a 10-char hex string.
 - `stroke` on `shape`/`button` is **nested**: `{"color": ..., "width": ...}`, not flat `stroke_color`/`stroke_width`.
-- `padding` on `button` is nested `{"vertical": ..., "horizontal": ...}`.
+- `padding` on `button` is nested `{"vertical": ..., "horizontal": ...}` — and it is not
+  optional in practice: **`padding` drives the button's actual rendered size, not
+  `layout.width/height`.** A button with no `padding` set renders far smaller than its
+  declared `width`/`height` — confirmed side by side: the same `layout` box (100×44),
+  one button with no `padding` rendered barely bigger than its own text, the other with
+  `padding: {"vertical": 14, "horizontal": 20}` rendered at the intended size. Always
+  set an explicit `padding` on every `button` layer; treat the declared `width`/`height`
+  as a rough positioning hint, not a guaranteed final size — a button that sits close to
+  a canvas edge or another element may need re-checking after a real render, since its
+  actual rendered width isn't precisely predictable in advance.
 - `rotation` (shape/button) must be **0–360**, not signed degrees.
 - `scale` in animation tweens must stay **0–100**.
 - A layer allows only **one tween per type** — repeated effects need multiple keyframe pairs packed into one tween's `keyframes` array.
