@@ -1,5 +1,6 @@
 {
   "name": "abyssale-mcp-skills",
+  "description": "Claude Skills that drive the Abyssale MCP server through complete, tested workflows — import designs, generate variations, personalize from a dataset, export print catalogs, and recreate Figma or HTML/CSS designs natively.",
   "owner": {
     "name": "Abyssale",
     "url": "https://abyssale.com"
