@@ -1,0 +1,39 @@
+{
+  "name": "abyssale-mcp-skills",
+  "owner": {
+    "name": "Abyssale",
+    "url": "https://abyssale.com"
+  },
+  "plugins": [
+    {
+      "name": "abyssale-import",
+      "source": "./abyssale-import",
+      "description": "Import a design into Abyssale from a JSON payload, including uploading local image assets."
+    },
+    {
+      "name": "figma-to-abyssale",
+      "source": "./figma-to-abyssale",
+      "description": "Recreate a Figma design as a native, fully-editable Abyssale design."
+    },
+    {
+      "name": "html-to-abyssale",
+      "source": "./html-to-abyssale",
+      "description": "Recreate an HTML/CSS banner as a native Abyssale design, including best-effort CSS/GSAP animation."
+    },
+    {
+      "name": "abyssale-variations",
+      "source": "./abyssale-variations",
+      "description": "Generate multiple format/size/language variations or a video from one design."
+    },
+    {
+      "name": "abyssale-personalize",
+      "source": "./abyssale-personalize",
+      "description": "Bulk-generate personalized creatives from a dataset — one visual per row."
+    },
+    {
+      "name": "abyssale-print-catalog",
+      "source": "./abyssale-print-catalog",
+      "description": "Generate a print-ready multi-page PDF catalog, brochure or lookbook."
+    }
+  ]
+}

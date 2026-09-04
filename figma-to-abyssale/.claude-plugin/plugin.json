@@ -1,0 +1,5 @@
+{
+  "name": "figma-to-abyssale",
+  "description": "Recreate a Figma design (Design file or FigJam board) as a native, fully-editable Abyssale design.",
+  "version": "1.0.0"
+}

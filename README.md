@@ -30,6 +30,22 @@ doesn't connect anything itself. See "Install" below.
 
 ## Install
 
-Copy the skill folder(s) you want into your client's skills directory (e.g. `.claude/skills/` for Claude Code), or install via your client's plugin/marketplace mechanism if it supports one.
+**Claude Code, via the plugin marketplace** (recommended — this repo ships a
+`.claude-plugin/marketplace.json`):
+
+```
+/plugin marketplace add getabyssale/abyssale-mcp-skills
+/plugin install html-to-abyssale@abyssale-mcp-skills
+```
+
+Repeat the `install` line for any other skill from the table above (`abyssale-import`,
+`figma-to-abyssale`, `abyssale-variations`, `abyssale-personalize`,
+`abyssale-print-catalog`).
+
+**Manually, anywhere else**: copy the skill folder(s) you want into your client's
+skills directory (e.g. `.claude/skills/` for Claude Code without the marketplace flow).
+For a client without Claude's Skill auto-discovery (Codex, Cursor, etc.), a `SKILL.md`
+still works as plain reference material — point the agent at it yourself rather than
+relying on it being picked automatically.
 
 Each skill assumes the [Abyssale MCP server](https://developers.abyssale.com/mcp/overview) is already connected — see that page for setup instructions.

@@ -1,0 +1,5 @@
+{
+  "name": "html-to-abyssale",
+  "description": "Recreate an HTML/CSS banner as a native Abyssale design, including best-effort CSS/GSAP animation.",
+  "version": "1.0.0"
+}
