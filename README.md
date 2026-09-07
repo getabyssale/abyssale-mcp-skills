@@ -48,4 +48,17 @@ For a client without Claude's Skill auto-discovery (Codex, Cursor, etc.), a `SKI
 still works as plain reference material — point the agent at it yourself rather than
 relying on it being picked automatically.
 
+**Any other agent, via the `skills` CLI**: [`skills`](https://github.com/vercel-labs/skills)
+(Vercel Labs, not an Abyssale/Anthropic tool — third-party, mentioned here as a convenience,
+not maintained by us) auto-discovers `SKILL.md` files in any public GitHub repo across 20+
+agents. No submission or registration needed — it works directly against this repo:
+
+```bash
+npx skills add getabyssale/abyssale-mcp-skills --skill html-to-abyssale
+```
+
+Swap `--skill` for any other skill name from the table above, or drop the flag to install all
+six. Needs Node ≥22.20 — on an older Node this fails with a `styleText` import error; switch
+with `nvm install 22 && nvm use 22` first if you hit that.
+
 Each skill assumes the [Abyssale MCP server](https://developers.abyssale.com/mcp/overview) is already connected — see that page for setup instructions.
