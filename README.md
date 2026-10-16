@@ -1,6 +1,6 @@
 # Abyssale MCP Skills
 
-Ready-made Claude Skills for Abyssale — turn designs into imports, variations, personalized batches, and print-ready PDFs.
+Ready-made skills for Abyssale — create designs and turn them into imports, variations, personalized batches, and print-ready PDFs.
 
 These skills drive the [Abyssale MCP server](https://developers.abyssale.com/mcp/overview) through complete, tested workflows — install one and describe what you want in plain language instead of chaining tool calls yourself.
 
@@ -8,6 +8,7 @@ These skills drive the [Abyssale MCP server](https://developers.abyssale.com/mcp
 
 | Skill | What it does |
 |---|---|
+| [`abyssale-design`](./abyssale-design) | Create, adapt or fix editable Abyssale designs (static, animated, print, multipage) from a brief, a brand URL, a reference or an existing design — with brand research, AI images and visual QA |
 | [`abyssale-import`](./abyssale-import) | Import a design into Abyssale from a JSON payload, with images passed as URLs |
 | [`figma-to-abyssale`](./figma-to-abyssale) | Recreate a Figma design as a native, fully-editable Abyssale design |
 | [`html-to-abyssale`](./html-to-abyssale) | Recreate an HTML/CSS banner (HTML5 ad, email banner, design-tool export) as a native Abyssale design, including best-effort CSS/GSAP animation |
@@ -38,8 +39,8 @@ doesn't connect anything itself. See "Install" below.
 /plugin install html-to-abyssale@abyssale-mcp-skills
 ```
 
-Repeat the `install` line for any other skill from the table above (`abyssale-import`,
-`figma-to-abyssale`, `abyssale-variations`, `abyssale-personalize`,
+Repeat the `install` line for any other skill from the table above (`abyssale-design`,
+`abyssale-import`, `figma-to-abyssale`, `abyssale-variations`, `abyssale-personalize`,
 `abyssale-print-catalog`).
 
 **Manually, anywhere else**: copy the skill folder(s) you want into your client's
@@ -58,7 +59,7 @@ npx skills add getabyssale/abyssale-mcp-skills --skill html-to-abyssale
 ```
 
 Swap `--skill` for any other skill name from the table above, or drop the flag to install all
-six. Needs Node ≥22.20 — on an older Node this fails with a `styleText` import error; switch
+seven. Needs Node ≥22.20 — on an older Node this fails with a `styleText` import error; switch
 with `nvm install 22 && nvm use 22` first if you hit that.
 
 Each skill assumes the [Abyssale MCP server](https://developers.abyssale.com/mcp/overview) is already connected — see that page for setup instructions.

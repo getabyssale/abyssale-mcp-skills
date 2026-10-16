@@ -1,0 +1,11 @@
+interface:
+  display_name: "Abyssale Design"
+  short_description: "Create, adapt, and correct Abyssale designs"
+  default_prompt: "Use $abyssale-design to create or adapt an Abyssale design faithful to my brief, with appropriate layers and formats."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "abyssale"
+      description: "Abyssale MCP server"
+      transport: "streamable_http"
+      url: "https://mcp.abyssale.com/mcp"

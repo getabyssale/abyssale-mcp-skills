@@ -25,7 +25,7 @@ The Abyssale MCP server must be connected with the `generate:banner` and `read:d
 
 1. **Identify the design.** Use `search_designs` or `list_designs` to find its identifier, then `get_design` to confirm it's the right one and read its `type`, its available formats and its layers.
    - If the user asks for a size the design doesn't have, say so — new formats are added in the Abyssale editor. Don't invent a `template_format_names` value.
-   - For a text, language or image change, map it to the real layer names and attributes from `get_design` (call `get_design_format` to see what a valid value looks like). **Never guess layer or property names**: a wrong name is silently ignored (no error, no change). Images must be HTTPS URLs. For a font change, use the `id` from `list_fonts` in `elements.<layer>.font`.
+   - For a text, language or image change, map it to the real layer names and attributes from `get_design` (call `get_design_format` to see what a valid value looks like). **Never guess layer or property names**: a wrong name has no effect. Images must be HTTPS URLs. For a font change, use the `id` from `list_fonts` in `elements.<layer>.font`.
 
 2. **Choose the tool:**
    - **One image, in one format, from a static design, with no AI properties** → `generate_static_banner`. It returns the file directly.

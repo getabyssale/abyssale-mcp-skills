@@ -32,12 +32,12 @@ Token needs the **"File content: Read"** scope (Figma → Settings → Personal 
 Wrong scope (e.g. only `file_dev_resources`) → `403 Invalid scope(s)... requires file_content:read`.
 A newly-added MCP server needs a session restart before its tools show up via ToolSearch.
 
-## 1. Supported Figma file types (verified empirically this session)
+## 1. Supported Figma file types
 
 | Type | URL pattern | Status |
 |---|---|---|
-| Design file | `/design/...` | ✅ supported, tested |
-| FigJam board | `/board/...` | ✅ supported, tested (2 full designs built) |
+| Design file | `/design/...` | ✅ supported |
+| FigJam board | `/board/...` | ✅ supported |
 | Figma Buzz | `/buzz/...` | ❌ confirmed unsupported — Figma's own REST API returns `400 "File type not supported by this endpoint"` on `GET /files/:key`. Not an MCP bug (verified in source: no file-type filtering happens in the MCP, the 400 comes straight from api.figma.com). No workaround exists through this API. |
 | Figma Slides | `.deck` | ⚠️ likely unsupported — per Figma community forum, Slides nodes only exist in the proprietary Kiwi binary format (`fig-deck`), not exposed via REST API. Not personally tested. |
 | Figma Sites / Make | — | not tested, no info found |
@@ -45,20 +45,19 @@ A newly-added MCP server needs a session restart before its tools show up via To
 **If a URL has no `node-id`**, it points at the file root — call `get_figma_data(fileKey, depth: 2)`
 first to list top-level frames/pages, then re-call with the right `nodeId`.
 
-## 2. Rate limits (starter plan, Viewer/Collaborator seat — hit repeatedly this session)
+## 2. Figma rate limits (Starter plan, Viewer/Collaborator seat)
 
 Error looks like:
 ```
 Error fetching file: Figma API rate limit hit (429). Retry after <seconds>. Your Figma seat type
 (Viewer or Collaborator) has a lower API rate limit. Your starter plan has limited API access.
 ```
-**Verified exact number from Figma's own rate-limits doc** (`developers.figma.com/docs/rest-api/rate-limits/`):
+Per Figma's rate-limits doc (`developers.figma.com/docs/rest-api/rate-limits/`):
 on a Starter plan with a Viewer/Collaborator seat, **Tier 1 endpoints are capped at 20 requests per
 MONTH**. Tier 1 = exactly the endpoints this pipeline depends on: `GET file`, `GET file/nodes`,
 `GET image` — i.e. every `get_figma_data` and `download_figma_images` call. This is a **monthly
-quota**, not a recurring short-term rate limit — don't describe a retry delay of several days as
-"the rate limit is 4-6 days," that's just how far into the current monthly cycle you happen to be
-before it resets. Correction logged 2026-09-01 after stating this imprecisely to the user.
+quota**, not a recurring short-term rate limit: a retry delay of several days just reflects how
+far into the current monthly cycle you are.
 
 Practical consequence: **20 Tier-1 calls/month is very easy to exhaust** — a single moderately
 complex design rebuild can use 5-10 calls (one `get_figma_data` + several `download_figma_images`
@@ -83,10 +82,8 @@ loop/retry, and ask whether to wait, upgrade the plan/seat, or use a different t
   the tree (recursive walk from the root frame, accumulating x/y).
 - **Hug-sized elements** (`sizing: {horizontal: hug, vertical: hug}` or no `dimensions` at all)
   have NO explicit width/height in the data — you must compute it yourself (child bbox + padding,
-  or from a `download_figma_images` pixel size ÷ pngScale). **Known bug from a past session**:
-  forgetting this for 2 nodes (`bubble_blue`, `name_pill`) silently dropped them from the rebuild
-  because a hand-written tree-walker skipped emitting layers when w/h was `None`. Never leave a
-  hug-sized element's box uncomputed.
+  or from a `download_figma_images` pixel size ÷ pngScale). Never leave a hug-sized element's
+  box uncomputed — a tree-walker that skips nodes without width/height silently drops them.
 - Colors come pre-resolved to hex/rgba in `fills`/`strokes` (via `GLOBAL_VARS`) — no manual
   Figma-variable resolution needed on your end.
 
@@ -100,7 +97,7 @@ loop/retry, and ask whether to wait, upgrade the plan/seat, or use a different t
 | `IMAGE-SVG` | `image` — download via `download_figma_images` (no `imageRef` needed, vector auto-detected) |
 | `RECTANGLE`/`ELLIPSE`/`VECTOR` used as an **organic/irregular vector shape** (blobs, wavy decorative lines, dot patterns, thin accent strokes) | `image`, same as `IMAGE-SVG` — see §6b, this is not a native `shape` even though the Figma type looks like RECTANGLE/ELLIPSE |
 | `SHAPE_WITH_TEXT` (e.g. sticky notes) | split into 2 layers: a `shape` (bg/radius) + a `text` (centered, using the node's `name` or its text content) |
-| `CONNECTOR` | approximate as a thin `shape` (2-4px wide rect) along the bounding box — exact bezier/elbow routing is not worth reproducing natively; disclosed simplification, consistently used across sessions |
+| `CONNECTOR` | approximate as a thin `shape` (2-4px wide rect) along the bounding box — exact bezier/elbow routing is not worth reproducing natively; tell the user about this simplification |
 | Complex `INSTANCE` (toolbars, keycaps, deeply nested UI chrome) | **judgment call**: either fully decompose (preferred, per "no grouping" default) or flatten to one downloaded image if genuinely decorative chrome not worth decomposing — **always disclose this compromise explicitly to the user**, don't decide silently |
 | Pure transparent layout `FRAME` with no fill/stroke of its own | skip — it's just an auto-layout container, not a visible layer |
 
@@ -139,11 +136,6 @@ individually-positioned layer; only *its internal representation* is a raster im
 native primitive. Only collapse multiple *different* vector elements into one image if they were
 already a single Figma node to begin with.
 
-Validated end-to-end on a real design (`Test Yass` — teal/orange poster with 2 organic blobs, a
-wavy line, a dot-pattern column, and a thin diagonal accent line, all reproduced as separate
-`image` layers at their native Figma bounding box, alongside 3 native `shape`/photo layers and
-6 native `text` layers — 14 layers total, visual match confirmed against the Figma render).
-
 **Circular photo crops**: an `ELLIPSE` node with an `IMAGE` fill (a Figma "photo in a circle" pattern)
 maps to one `image` layer with `mask_name: "circle"` (§7) at the ellipse's own square-ish bounding
 box — don't split it into a separate ellipse-mask shape, `mask_name` does the clipping natively.
@@ -161,7 +153,7 @@ of paging through the full list, e.g. `list_fonts(name: "Open Sans")`, or `categ
 to find a substitute for an unavailable Figma font. Filter a weight with `weight` (700 = bold) and
 italic with `style: "italic"` — not by putting "Bold"/"Italic" in the name.
 
-## 7. Abyssale `import_design_from_json` schema gotchas (learned the hard way)
+## 7. Abyssale `import_design_from_json` schema rules
 
 - The payload needs `name`, `type` and `target` — `target.project_uuid` must be a real project of the
   user's (`list_projects`, or `create_project` for a new one). Never leave the `YOUR_PROJECT_UUID`
@@ -174,24 +166,18 @@ italic with `style: "italic"` — not by putting "Bold"/"Italic" in the name.
 - `text` `font_size` is required (2–1000) and is a starting size — the text shrinks to fit its box;
   `font_weight` is a multiple of 100 (100–900).
 - `stroke` on `shape`/`button` is **nested**: `{"color": ..., "width": ...}`, not flat `stroke_color`/`stroke_width`.
-- `padding` on `button` is nested `{"vertical": ..., "horizontal": ...}` — and it is not
-  optional in practice: **`padding` drives the button's actual rendered size, not
-  `layout.width/height`.** A button with no `padding` set renders far smaller than its
-  declared `width`/`height` — confirmed side by side: the same `layout` box (100×44),
-  one button with no `padding` rendered barely bigger than its own text, the other with
-  `padding: {"vertical": 14, "horizontal": 20}` rendered at the intended size. Always
-  set an explicit `padding` on every `button` layer; treat the declared `width`/`height`
-  as a rough positioning hint, not a guaranteed final size — a button that sits close to
-  a canvas edge or another element may need re-checking after a real render, since its
-  actual rendered width isn't precisely predictable in advance.
+- `padding` on `button` is a number or `{"vertical": ..., "horizontal": ...}`. A button's
+  visible box is sized from its label plus `padding` and placed inside the layer box by
+  `alignment`: always set an explicit `padding`. The layer box must be large enough for the
+  label — give it enough width, or set `min_font_size` if the label may shrink.
 - `rotation` (shape/button) must be **0–360**, not signed degrees.
 - `scale` in animation tweens must stay **0–100**.
 - A layer allows only **one tween per type** — repeated effects need multiple keyframe pairs packed into one tween's `keyframes` array.
 - `video` layer type rejects `fitting_type`/`alignment` (unlike `image`).
 - `fitting_type` on `image` only accepts `"cover"` or `"fill"` — never `"contain"`.
 - `mask_name: "circle"` is available on `image` layers for circular crops (other masks: `rounded_corners` — needs `mask_properties.radius` —, `blob`, `squircle`, `pentagon`, `hexagon`, `parallelogram`, `window`).
-- **`radius` works on `image` layers too** (not just `shape`) — confirmed via `validate_only`, e.g. `radius: 284` on a 568×745 image produces a pill/stadium shape (rounded rect where radius ≈ half the shorter side), not just a plain circle mask. Use this for any Figma `RECTANGLE` with an image fill and a large `borderRadius`.
-- **`rotation` and `shadow` both work on `text` layers**, not just `shape`/`button` (undocumented previously, confirmed via `validate_only` + a real render). `rotation` is clockwise, 0–360, and pivots near the **top-left corner of the declared layout box** — confirmed empirically: a box `{x:100,y:100,w:200,h:40}` with `rotation: 90` rendered as a vertical strip reading bottom-to-top, anchored near the box's original top-left, not its center. For a Figma node whose reported bounding box is already the *rotated* box (e.g. a vertical text label with `w:42,h:530`), swap back to the *pre-rotation* horizontal dimensions (`w:530,h:42`) and keep the same `x,y` origin before applying `rotation: 90` — don't feed it the already-rotated box.
+- **`radius` works on `image` layers too** (not just `shape`), e.g. `radius: 284` on a 568×745 image produces a pill/stadium shape (rounded rect where radius ≈ half the shorter side), not just a plain circle mask. Use this for any Figma `RECTANGLE` with an image fill and a large `borderRadius`.
+- **`rotation` and `shadow` both work on `text` layers**, not just `shape`/`button`. `rotation` is clockwise, 0–360; check the rotated text's position on the first render. For a Figma node whose reported bounding box is already the *rotated* box (e.g. a vertical text label with `w:42,h:530`), swap back to the *pre-rotation* horizontal dimensions (`w:530,h:42`) and keep the same `x,y` origin before applying `rotation: 90` — don't feed it the already-rotated box.
 - **Gradients are native, as strings — not objects.** Passing an object for `background_color` (e.g. `{"type": "radial", "colors": [...]}`) fails with `wrong_type: Not a valid string`. Use the string form instead: `linear-gradient(<x>% <y>% <x1>% <y1>%,<off>% <color> <alpha>,…)` or `radial-gradient(<cx>% <cy>% <r>%,<off>% <color> <alpha>,…)`, with 2 to 8 stops (offset 0–100%, alpha 0–1). It's accepted on a text `color`, a shape/button `background_color` and the format background on static and animated designs (printer designs: shape/button background only). For a Figma `GRADIENT_LINEAR`/`GRADIENT_RADIAL` fill, convert `fills[].gradient` into that string. Only fall back to a rasterized PNG (`download_figma_images` of the node) for effects the string can't express.
 
 ## 6c. Elements positioned off-canvas — exclude entirely, don't decompose
@@ -222,14 +208,14 @@ otherwise bleed past). Skip a plain white/solid "mask" base layer that sits dire
 already-opaque cover-fit artwork of the exact same box — it can never be visible, so it isn't a
 decomposition shortcut to include it, just dead weight.
 
-## 6f. Verifying a created design: the Abyssale app editor URL isn't fetchable
+## 6f. Verifying a created design
 
 A design's page in the Abyssale web app is a JS-rendered SPA behind auth — `WebFetch` on
 it only ever returns a static loading-shell message ("Abyssale is loading your experience..."), never
 the actual design content. Don't rely on it to verify a design. Always use
 `generate_static_banner` + download + `Read` (§8 step 9) for visual QA instead.
 
-## 8. Full pipeline, step by step (this is exactly what worked, repeatedly)
+## 8. Full pipeline, step by step
 
 1. Extract `fileKey` + `nodeId` from the Figma URL (`node-id=942-2723` → nodeId `"942:2723"`, dashes→colons).
 2. `get_figma_data(fileKey, nodeId)`. If node has no `node-id` in URL, first call with `depth: 2` to find the right top-level frame.
@@ -243,7 +229,7 @@ the actual design content. Don't rely on it to verify a design. Always use
 9. `generate_static_banner(design_id, template_format_name)` (this spends credits) → download the rendered image and `Read` it to visually QA against the Figma source before reporting back.
 10. Report to the user: what got natively decomposed vs. what got flattened to an image (and why), plus any visual defects spotted in the render.
 
-## 9. Standing rules from the user (do not relitigate)
+## 9. Working rules
 
 - Default to full per-element decomposition — no silent flattening/grouping of distinct visual
   elements into one image. Any flatten-to-image decision on a complex instance must be disclosed,

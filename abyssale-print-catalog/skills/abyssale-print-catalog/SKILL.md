@@ -23,7 +23,7 @@ The Abyssale MCP server must be connected with the `generate:banner` and `read:d
 3. **Build the overrides.** For each page you want to change, pass an object keyed by that page's layer names (from step 2), each mapping to the override properties for that layer — `{ "page_N": { "<layer name>": { …overrides } } }`. `pages` is required: pass `{}` to export the catalog with its saved content unchanged. Images must be HTTPS URLs.
 
 4. **Call `generate_multipage_pdf`** with `design_id` and the `pages` object from step 3. Two important behaviors:
-   - **Wrong page/layer/property names fail silently** — an unknown key is accepted and simply does nothing, no error. If a page didn't change the way you expected, re-check the names against `get_design_as_import`'s output rather than assuming the API rejected something.
+   - **An unknown page, layer or property name has no effect.** If a page didn't change as expected, re-check the names against `get_design_as_import`'s output.
    - It waits internally for up to ~60 seconds and returns the finished PDF directly if ready in time. Pass `wait_for_result: false` up front if the catalog has many pages (likely slow) or the user said not to wait — you'll get a `generation_request_id` back immediately instead.
 
 5. **If you got back a `generation_request_id`** (either because `wait_for_result: false` was set, or the 60s window ran out), poll it with `check_generation_status` — the same status tool used for async banner/video generation. Once finalized, give the user the PDF URL from `banners` and surface any `errors`. A request can only be looked up for 7 days (`generation_request_gone` after that).

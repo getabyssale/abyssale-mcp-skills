@@ -1,0 +1,60 @@
+{
+  "target": {
+    "kind": "design",
+    "project_uuid": "<PROJECT_UUID>"
+  },
+  "name": "SCRATCH ai-assets",
+  "type": "static",
+  "formats": [
+    {
+      "name": "sq",
+      "width": 1024,
+      "height": 1024,
+      "background_color": "#FFFFFF00"
+    },
+    {
+      "name": "wide",
+      "width": 1600,
+      "height": 900,
+      "background_color": "#FFFFFF00"
+    },
+    {
+      "name": "tall",
+      "width": 900,
+      "height": 1600,
+      "background_color": "#FFFFFF00"
+    }
+  ],
+  "layers": [
+    {
+      "name": "img",
+      "type": "image",
+      "layout": {
+        "sq": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 1024
+        },
+        "wide": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 900
+        },
+        "tall": {
+          "x": 0,
+          "y": 0,
+          "width": 900,
+          "height": 1600
+        }
+      },
+      "properties": {
+        "default": {
+          "fitting_type": "cover",
+          "alignment": "middle center"
+        }
+      }
+    }
+  ]
+}

@@ -55,13 +55,10 @@ the same height in a 300×600 half-page, and the official `static-multi-format`/
 0. **Before writing any payload by hand, fetch a fresh official example** —
    `get_design_import_example(type: "animated")` (or `"static"`, `"animated-video"`,
    `"static-multi-format"` as fits) — rather than reconstructing the shape from memory
-   or an earlier conversation summary. Several real mistakes this skill's own rules
-   below were learned from (`formats` built as an object instead of a list, a
-   top-level `animations` map instead of a per-layer `animation` block, tween
-   keyframes missing their `data.time`/`data.type`/`ease` structure) came specifically
-   from reconstructing the schema from memory instead of re-reading a real example
-   first. The example is the source of truth; this skill's notes are a supplement to
-   it, not a replacement. Every example contains `target.project_uuid:
+   or an earlier conversation summary — common mistakes otherwise: `formats` built as
+   an object instead of a list, a top-level `animations` map instead of a per-layer
+   `animation` block, tween keyframes missing their `data.time`. The example is the
+   source of truth; this skill's notes are a supplement to it, not a replacement. Every example contains `target.project_uuid:
    "YOUR_PROJECT_UUID"` — replace it with a real project: call `list_projects` and ask
    the user which one, or `create_project` for a new one.
 
@@ -81,8 +78,8 @@ the same height in a 300×600 half-page, and the official `static-multi-format`/
 
    | CSS element | Abyssale layer |
    |---|---|
-   | A `<div>`/text node with just text content | `text` — `payload`, `color`, `font`, `font_size` (required, 2–1000 — a starting size that auto-shrinks to fit the box), `font_weight`, `text_align`, `vertical_align`. A source `<br>` or hard line break becomes a literal `\n` inside `payload` (confirmed: `"payload": "PUSH\nHARDER"` rendered as two lines, matching the source's `PUSH<br>HARDER`) — don't try to split it into two separate text layers. |
-   | A `<div>` styled as a button/pill (background + radius + text, e.g. a CTA) | `button` — use this native type directly, don't decompose into shape+text. Same text properties, plus `background_color`, `radius`, `padding` (a number or `{vertical, horizontal}` — optional in the schema but required in practice, see the note right after this table) and `alignment` (where the button sits inside its layer box, default `middle center`). **No `vertical_align`** — including it fails validation with `unknown_field`. |
+   | A `<div>`/text node with just text content | `text` — `payload`, `color`, `font`, `font_size` (required, 2–1000 — a starting size that auto-shrinks to fit the box), `font_weight`, `text_align`, `vertical_align`. A source `<br>` or hard line break becomes a literal `\n` inside `payload` (e.g. `PUSH<br>HARDER` → `"payload": "PUSH\nHARDER"`) — don't try to split it into two separate text layers. |
+   | A `<div>` styled as a button/pill (background + radius + text, e.g. a CTA) | `button` — use this native type directly, don't decompose into shape+text. Same text properties, plus `background_color`, `radius`, `padding` (a number or `{vertical, horizontal}` — always set it, see the note right after this table) and `alignment` (where the button sits inside its layer box, default `middle center`). **No `vertical_align`** — including it fails validation with `unknown_field`. |
    | A `<div>` styled as a filled/bordered box with no text | `shape` — `background_color`, `radius`, optional nested `stroke: {color, width}` |
    | An `<img>`, or a CSS `background-image` on a container | `image` — `src` as a public HTTPS URL (preferred); otherwise a `data:image/...;base64,` URI of at most 100 KB (tell the user if you recompressed it); a bare local filename only if you can run shell commands — see `abyssale-import` for that upload flow |
    | An inline `<svg>` | No native SVG/vector layer type exists — rasterize it (e.g. with `cairosvg`) and import as one `image` layer. Don't try to decompose an SVG's sub-elements into separate Abyssale layers unless there's a real reason to animate them independently — flatten it as one piece by default |
@@ -96,20 +93,14 @@ lines on its own, and did so identically across two formats whose `layout` decla
 different widths for the same layer — no `\n` needed, and none should be added, when
 the source doesn't have an explicit break.
 
-**`button` sizing is driven by `padding`, not by `layout.width/height`.** A `button`
-layer with no `padding` set renders far smaller than its declared box — confirmed
-side by side on the same declared 100×44 box: with no `padding`, the button rendered
-barely larger than its own text; with `padding: {"vertical": 14, "horizontal": 20}`,
-it rendered at the intended size. Always set an explicit `padding` derived from the
-source CSS (its own `padding`, or a reasonable estimate from the box size and font
-size if the source used flex-centering instead). Treat the declared `width`/`height`
-as an approximate positioning hint, not a guaranteed final render size: a button
-placed close to a canvas edge or another element (e.g. an icon positioned just past
-where you expect the button to end) may need a re-check after the real render, since
-its actual rendered width isn't precisely predictable from `padding` and text content
-alone before rendering. A button can also look smaller or offset because of
-`alignment`: with the default `middle center`, the button is centered inside its layer
-box — use e.g. `"middle left"` to match a CSS box anchored on its left edge.
+**A `button`'s visible box is sized from its label plus `padding`, and placed inside
+the layer box by `alignment`.** Always set an explicit `padding` derived from the
+source CSS (its own `padding`, or an estimate from the box size and font size if the
+source used flex-centering). With the default `alignment` (`middle center`) the button
+is centered in its layer box — use e.g. `"middle left"` to match a CSS box anchored on
+its left edge. The layer box must be large enough for the label: if the text can't fit,
+the render fails — give the box enough width, or set `min_font_size` if the label may
+shrink. Check buttons near a canvas edge or another element on the first render.
 
 3. **Colors**: CSS hex maps directly (`#RGB`, `#RGBA`, `#RRGGBB`, `#RRGGBBAA`).
    Convert `rgb()`/`rgba()`/`hsl()` to hex (`#RRGGBBAA` with alpha) — those functions
@@ -120,15 +111,11 @@ box — use e.g. `"middle left"` to match a CSS box anchored on its left edge.
    exact accepted syntax in the validation error if one is rejected.
 
 4. **Fonts**: Abyssale needs a font **uuid**, not a family name — call `list_fonts`
-   filtered by `name`. **Prefer a Google Fonts result (`type: "google"`) over a
-   custom-uploaded one of the same name** if both exist: a custom upload can have
-   different internal line-height/ascent metrics, which has caused real, confirmed
-   text-box overlap at coordinates that render cleanly with the Google Fonts version.
-   Font weight isn't validated against the font's `available_weights` — an
-   unavailable weight is silently substituted to the nearest one. That substitution
-   is reported as a `warnings` entry (`font_weight_adjusted`) on a **real** import
-   call, but not on `validate_only` — check `warnings` after the real import, don't
-   rely on a clean `validate_only` to mean no substitution happened.
+   filtered by `name`. If both a Google Fonts result (`type: "google"`) and a custom
+   upload of the same name exist, prefer the Google Fonts one unless the brand requires
+   its own file — then check the first render for spacing. A weight the font doesn't
+   have is replaced by the nearest one, reported as a `font_weight_adjusted` warning on
+   the real import (`validate_only` doesn't resolve fonts).
 
 5. **Validate, then import for real**: `import_design_from_json(validate_only: true)`
    first, fix schema errors, then `validate_only: false`. A clean `validate_only`
@@ -138,11 +125,8 @@ box — use e.g. `"middle left"` to match a CSS box anchored on its left edge.
    import waits up to ~60 s and usually returns the final status; if it comes back with
    `is_finalized: false`, check again with `check_design_import_status` (statuses:
    `WAITING_FOR_VALIDATION`, `QUEUED`, `PROCESSING`, `DONE`, `FAILED`). On `DONE` the
-   design id is `result.uuid`; on `FAILED` read `error`. A real import can also come
-   back with a `preview_generation_failed` warning (one per format, with a `reason`) —
-   confirmed benign: the design is still created and finalized (`is_finalized: true`),
-   and rendering it explicitly right after works normally. Don't treat this warning as
-   a reason to re-import; treat it as a reason to do step 6.
+   design id is `result.uuid`; on `FAILED` read `error`. Read every warning, then
+   render the design in step 6.
 
 6. **Visually QA** (each render spends Abyssale credits) — `generate_static_banner`
    for a static design; for `animated` designs it rejects outright
@@ -189,22 +173,6 @@ its tween only moves during a sub-range of it) — the tween's own keyframe `dat
 values are what stagger the actual movement inside that constant presence window; the
 engine holds the first keyframe's value before the tween starts and the last
 keyframe's value after it ends.
-
-**Widening a button layer to a full-duration window can then trigger a `cannot fit`
-render error that an identical narrower-window version didn't have** — confirmed by
-isolating the change to one `button` layer, same `payload`/`padding`/`font_size`,
-only the window widened: the narrow-window version rendered fine, the wide-window one
-failed with `Element <name> error: The text '<payload>' cannot fit within the defined
-space.`, reproducibly, across repeated renders. Cause (inferred from the fix that
-resolved it, not confirmed from Abyssale internals): a full-duration window puts the
-button in a static "resting" pose before its tween starts, and in that pose the
-declared `layout.width` seems to be enforced as a hard cap that `padding`-driven
-auto-sizing (see the padding note above) doesn't get to override — unlike during the
-tween's own active span, where it rendered fine at the same padding. **Fix: give an
-animated button's declared `layout.width` real margin beyond `padding.horizontal * 2 +
-estimated text width`, don't rely on padding alone once the layer spans the full
-timeline** — widening one button from 130px to 175px (same text/padding/font)
-resolved it with no other change.
 
 **Tween vocabulary** (confirmed against the official reference,
 developers.abyssale.com/rest-api/designs/import/animated):
@@ -256,8 +224,7 @@ banner), give each its own hold-pattern tween with non-overlapping visible windo
 compute absolute times from the GSAP timeline by hand (`"+=N"` adds `N`s after the
 current end of the timeline; `"<"` starts alongside the immediately-preceding tween's
 start). If two scenes end up visible at once, the likely cause is a layer that never
-actually reaches opacity 0 — re-check its keyframes (and its `.from()`/`.to()` intent)
-before assuming it's an Abyssale bug.
+actually reaches opacity 0 — re-check its keyframes (and its `.from()`/`.to()` intent).
 
 ### Effects with no native equivalent — approximate simply, don't over-engineer
 
