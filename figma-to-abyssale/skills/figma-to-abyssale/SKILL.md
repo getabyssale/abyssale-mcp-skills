@@ -1,6 +1,6 @@
 ---
 name: figma-to-abyssale
-description: Recreate a Figma design (Design file or FigJam board) as a native, multi-layer, fully-editable Abyssale design via the abyssale_preprod MCP. Use whenever the user gives a Figma URL and wants it rebuilt in Abyssale (import_design_from_json), not just referenced.
+description: Recreate a Figma design (Design file or FigJam board) as a native, multi-layer, fully-editable Abyssale design via the Abyssale MCP server. Use whenever the user gives a Figma URL and wants it rebuilt in Abyssale (import_design_from_json), not just referenced.
 ---
 
 # Figma → Abyssale conversion
@@ -95,7 +95,7 @@ loop/retry, and ask whether to wait, upgrade the plan/seat, or use a different t
 | Figma | Abyssale |
 |---|---|
 | `TEXT` | `text` layer — `payload` = the text, `color`, `font` (see §5), `font_weight`, `font_size`, `line_height` (%, Figma `lineHeight: 1.4em` → `140`), `text_align`, `vertical_align` |
-| `RECTANGLE`/`ELLIPSE` (no image fill) | `shape` — `background_color`, `radius` (from `borderRadius`), `stroke: {color, width}` (nested, not flat), optional `shadow` |
+| `RECTANGLE`/`ELLIPSE` (no image fill) | `shape` — `shape` (`"rectangle"` by default; an `ELLIPSE` is `"circle"`), `background_color`, `radius` (from `borderRadius`), `stroke: {color, width}` (nested, not flat), optional `shadow` |
 | `RECTANGLE` with `fills[].type == "IMAGE"` | `image` — download via `download_figma_images` using that fill's `imageRef`, `fitting_type: "cover"` (Abyssale only accepts `cover`/`fill`, never `contain`) |
 | `IMAGE-SVG` | `image` — download via `download_figma_images` (no `imageRef` needed, vector auto-detected) |
 | `RECTANGLE`/`ELLIPSE`/`VECTOR` used as an **organic/irregular vector shape** (blobs, wavy decorative lines, dot patterns, thin accent strokes) | `image`, same as `IMAGE-SVG` — see §6b, this is not a native `shape` even though the Figma type looks like RECTANGLE/ELLIPSE |
@@ -106,9 +106,10 @@ loop/retry, and ask whether to wait, upgrade the plan/seat, or use a different t
 
 ## 5. Colors and fonts
 
-- Color: Figma hex/rgba → Abyssale `#RRGGBBAA` (8-char hex with alpha). No 10-char hex.
-  If alpha is already embedded, don't append an extra `FF`.
-- Font: Abyssale needs a font **UUID**, not a family name — call `list_fonts` to find the closest
+- Color: Figma hex/rgba → Abyssale hex — `#RGB`, `#RGBA`, `#RRGGBB` or `#RRGGBBAA` (8-char with
+  alpha). No 10-char hex, no `rgb()`/`rgba()` strings. If alpha is already embedded, don't append an
+  extra `FF`. Gradients have a native string form — see §7.
+- Font: Abyssale needs a font **UUID** (the `id` returned by `list_fonts`), not a family name — call `list_fonts` to find the closest
   match (Figma project fonts like "Kaftan Serif - Trial" or "Nanum Pen" are almost never
   available in Abyssale — substitute the nearest available font and mention the substitution).
 - `line_height`: Abyssale takes a percentage; Figma gives `em` (e.g. `1.4em` → `140`, `1em` → `100`).
@@ -124,8 +125,10 @@ inventing layers that don't exist in the source.
 
 ## 6b. Organic/vector shapes → always `image`, never native `shape`
 
-Abyssale's native `shape` layer only supports **rectangle/ellipse primitives** (`background_color`,
-`radius`, `stroke`) — it cannot reproduce an arbitrary bezier path. So any Figma element that is
+Abyssale's native `shape` layer only supports a fixed list of **primitives** set by its `shape`
+property (`rectangle`, `circle`, `triangle`, `star_1`/`star_2`, `pentagon`, `hexagon`, `rhombus`,
+`arrow`, `heart`, `cloud`, `blob`… — use one when the Figma node really is that primitive) — it cannot
+reproduce an arbitrary bezier path. So any Figma element that is
 visually an irregular vector — organic blobs, decorative wavy lines, a column of small dots grouped
 as one vector, a thin diagonal accent line — must be downloaded as a real image
 (`download_figma_images`, no `imageRef` needed for pure vectors) and placed as its own `image` layer,
@@ -152,15 +155,24 @@ bbox guess). Instead, `download_figma_images` the root frame node itself at `png
 always rasterizes a frame at its own true defined size, so the returned pixel dimensions are exact.
 This same rendered PNG also doubles as a visual reference to check your element mapping against.
 
-**Finding fonts efficiently**: `list_fonts` has ~1180 entries — always pass the `name` filter
-(case-insensitive substring match) instead of paging through the full list, e.g.
-`list_fonts(name: "Open Sans")` or `list_fonts(name: "Slab")` to find a substitute for an
-unavailable Figma font.
+**Finding fonts efficiently**: `list_fonts` has ~1150 Google fonts plus the workspace's custom
+uploads — always pass the `name` filter (matching ignores case, accents, spaces and hyphens) instead
+of paging through the full list, e.g. `list_fonts(name: "Open Sans")`, or `category` (e.g. `serif`)
+to find a substitute for an unavailable Figma font. Filter a weight with `weight` (700 = bold) and
+italic with `style: "italic"` — not by putting "Bold"/"Italic" in the name.
 
 ## 7. Abyssale `import_design_from_json` schema gotchas (learned the hard way)
 
+- The payload needs `name`, `type` and `target` — `target.project_uuid` must be a real project of the
+  user's (`list_projects`, or `create_project` for a new one). Never leave the `YOUR_PROJECT_UUID`
+  placeholder from `get_design_import_example`.
+- A multi-format design must key **every** layer's `layout` and `properties` by format name (a
+  `default` key can hold shared values); a flat shape is only valid with a single format.
 - `layout.<format>.x/y/width/height` must be **integers** — round everything, `wrong_type` error otherwise.
-- Colors: `#RRGGBB`/`#RRGGBBAA` hex only (or gradient/cmyk objects) — never a 10-char hex string.
+- Colors: hex strings (`#RGB`/`#RGBA`/`#RRGGBB`/`#RRGGBBAA`), `cmyk(…)` strings, or gradient **strings**
+  (see the gradient bullet below) — never a 10-char hex string, never an object.
+- `text` `font_size` is required (2–1000) and is a starting size — the text shrinks to fit its box;
+  `font_weight` is a multiple of 100 (100–900).
 - `stroke` on `shape`/`button` is **nested**: `{"color": ..., "width": ...}`, not flat `stroke_color`/`stroke_width`.
 - `padding` on `button` is nested `{"vertical": ..., "horizontal": ...}` — and it is not
   optional in practice: **`padding` drives the button's actual rendered size, not
@@ -177,10 +189,10 @@ unavailable Figma font.
 - A layer allows only **one tween per type** — repeated effects need multiple keyframe pairs packed into one tween's `keyframes` array.
 - `video` layer type rejects `fitting_type`/`alignment` (unlike `image`).
 - `fitting_type` on `image` only accepts `"cover"` or `"fill"` — never `"contain"`.
-- `mask_name: "circle"` is available on `image` layers for circular crops.
+- `mask_name: "circle"` is available on `image` layers for circular crops (other masks: `rounded_corners` — needs `mask_properties.radius` —, `blob`, `squircle`, `pentagon`, `hexagon`, `parallelogram`, `window`).
 - **`radius` works on `image` layers too** (not just `shape`) — confirmed via `validate_only`, e.g. `radius: 284` on a 568×745 image produces a pill/stadium shape (rounded rect where radius ≈ half the shorter side), not just a plain circle mask. Use this for any Figma `RECTANGLE` with an image fill and a large `borderRadius`.
 - **`rotation` and `shadow` both work on `text` layers**, not just `shape`/`button` (undocumented previously, confirmed via `validate_only` + a real render). `rotation` is clockwise, 0–360, and pivots near the **top-left corner of the declared layout box** — confirmed empirically: a box `{x:100,y:100,w:200,h:40}` with `rotation: 90` rendered as a vertical strip reading bottom-to-top, anchored near the box's original top-left, not its center. For a Figma node whose reported bounding box is already the *rotated* box (e.g. a vertical text label with `w:42,h:530`), swap back to the *pre-rotation* horizontal dimensions (`w:530,h:42`) and keep the same `x,y` origin before applying `rotation: 90` — don't feed it the already-rotated box.
-- **No native gradient support**: passing an object for `background_color` (e.g. `{"type": "radial", "colors": [...]}`) fails with `wrong_type: Not a valid string` — confirmed via `validate_only`. `background_color` (and `color`) must always be a plain hex string. For a Figma `GRADIENT_LINEAR`/`GRADIENT_RADIAL` fill (frame background or shape fill), there's no native reproduction — regenerate the gradient as a local PNG (e.g. with Python/Pillow, replicating the CSS `linear-gradient()`/`radial-gradient()` given in `fills[].gradient`) and use it as a background `image` layer instead. Worth the effort only when the gradient is visually prominent (a full background); for a small/subtle gradient accent, a flat average-color approximation is an acceptable disclosed shortcut.
+- **Gradients are native, as strings — not objects.** Passing an object for `background_color` (e.g. `{"type": "radial", "colors": [...]}`) fails with `wrong_type: Not a valid string`. Use the string form instead: `linear-gradient(<x>% <y>% <x1>% <y1>%,<off>% <color> <alpha>,…)` or `radial-gradient(<cx>% <cy>% <r>%,<off>% <color> <alpha>,…)`, with 2 to 8 stops (offset 0–100%, alpha 0–1). It's accepted on a text `color`, a shape/button `background_color` and the format background on static and animated designs (printer designs: shape/button background only). For a Figma `GRADIENT_LINEAR`/`GRADIENT_RADIAL` fill, convert `fills[].gradient` into that string. Only fall back to a rasterized PNG (`download_figma_images` of the node) for effects the string can't express.
 
 ## 6c. Elements positioned off-canvas — exclude entirely, don't decompose
 
@@ -212,7 +224,7 @@ decomposition shortcut to include it, just dead weight.
 
 ## 6f. Verifying a created design: the Abyssale app editor URL isn't fetchable
 
-`https://app-preprod.abyssale.com/designs/<uuid>` is a JS-rendered SPA behind auth — `WebFetch` on
+A design's page in the Abyssale web app is a JS-rendered SPA behind auth — `WebFetch` on
 it only ever returns a static loading-shell message ("Abyssale is loading your experience..."), never
 the actual design content. Don't rely on it to verify a design. Always use
 `generate_static_banner` + download + `Read` (§8 step 9) for visual QA instead.
@@ -224,11 +236,11 @@ the actual design content. Don't rely on it to verify a design. Always use
 3. Map every node per §4, compute absolute positions per §3, resolve colors/fonts per §5.
 4. For nodes needing real pixels: `download_figma_images(fileKey, nodes: [{nodeId, imageRef?, fileName}], localPath: "src/assets/figma", pngScale)`.
    - For hug-sized nodes with no explicit Figma dimensions, the downloaded pixel size ÷ pngScale gives you the missing layout box.
-5. Build the `import_design_from_json` payload (`target.project_uuid`, `formats`, `layers`).
-6. `import_design_from_json(validate_only: true)` — fix any schema errors (see §7), repeat until clean.
-7. `import_design_from_json(validate_only: false, wait_for_result: true)` → returns `WAITING_FOR_VALIDATION` with one `upload_command` (curl) **per image layer**. Each has a **unique** `policy` + `signature` — never reuse one file's signature for another file. Execute each curl command verbatim, only substituting `<LOCAL_FILE_PATH>`.
-8. Poll `check_design_import_status(import_id)` until `status: "DONE"` → `result.uuid` is the new Abyssale design id. (Usually 1-2 polls with a few seconds' wait is enough; don't poll indefinitely.)
-9. `generate_static_banner(design_id, format_name)` → download the rendered JPEG and `Read` it to visually QA against the Figma source before reporting back.
+5. Build the `import_design_from_json` payload (`name`, `type`, `target.project_uuid` from `list_projects`/`create_project`, `formats`, `layers`). Start from `get_design_import_example` for the exact shape.
+6. `import_design_from_json(validate_only: true)` — fix any schema errors (see §7), repeat until clean. A clean result creates nothing and doesn't check fonts, image URLs or the project.
+7. `import_design_from_json(validate_only: false)`. Images: an image `src` given as a public HTTPS URL (or a `data:` URI of at most 100 KB) needs no upload — the call waits up to ~60 s and usually returns `DONE` or `FAILED` directly. The downloaded Figma assets are local files, so with a bare filename `src` it returns `WAITING_FOR_VALIDATION` with one upload command (curl) **per image layer**, only in this first response (status checks never repeat them). Each has a **unique** `policy` + `signature` — never reuse one file's signature for another file. Run each one yourself, verbatim except for `<LOCAL_FILE_PATH>` (don't reorder its fields), within one hour; never ask the user to run them. Every format of a layer must use the same file. (Claude.ai additionally needs the Abyssale upload bucket on its domain allowlist — see the MCP overview docs.)
+8. If the import isn't finalized yet, call `check_design_import_status(import_id)` (after uploads, this call is what starts processing) until `DONE` → `result.uuid` is the new Abyssale design id; check `warnings` (e.g. `text_fit_failed`, `font_weight_adjusted`). `QUEUED`/`PROCESSING` are normal; `FAILED` is final — read `error`. Usually 1-2 checks with a few seconds' wait are enough; don't poll indefinitely.
+9. `generate_static_banner(design_id, template_format_name)` (this spends credits) → download the rendered image and `Read` it to visually QA against the Figma source before reporting back.
 10. Report to the user: what got natively decomposed vs. what got flattened to an image (and why), plus any visual defects spotted in the render.
 
 ## 9. Standing rules from the user (do not relitigate)

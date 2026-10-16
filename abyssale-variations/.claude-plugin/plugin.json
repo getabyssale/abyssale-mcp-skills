@@ -1,5 +1,5 @@
 {
   "name": "abyssale-variations",
-  "description": "Generate multiple format/size/language variations or a video from an existing Abyssale design.",
+  "description": "Generate outputs from an existing Abyssale design in several of its formats, languages or text variations, or a video/GIF/HTML5 from an animated design.",
   "version": "1.0.0"
 }
