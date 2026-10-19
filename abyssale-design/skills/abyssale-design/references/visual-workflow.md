@@ -154,7 +154,7 @@ Compare the main render with the reference, then each adaptation with its invari
 - **Print:** verify physical dimensions, units, effective resolution, bleed, safe area, and color settings against supplied specifications. Do not invent printer requirements.
 - **Multipage:** check every page, order, continuity, content, and recurring elements. Verify the `printer_multipage` type and contract before serialization.
 
-Correct the observed cause and repeat affected checks. If an effect is available only in the editor, finalize there and verify persistence; if no compatible route exists, explain the tradeoff instead of inventing a property. Once criteria are met, deliver without arbitrary new exploration.
+Correct the observed cause and repeat affected checks. If an effect isn't available through the MCP ([MCP limits](mcp-limits.md)), explain the tradeoff instead of inventing a property. Once criteria are met, deliver without arbitrary new exploration.
 
 ## Delivery and limitations
 

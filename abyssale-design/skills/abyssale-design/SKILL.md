@@ -5,7 +5,7 @@ description: "Create, reproduce, adapt or fix editable designs in Abyssale throu
 
 # Design and produce in Abyssale
 
-Preserve artistic intent and intended use through an **editable, native structure** that survives new copy, new formats and hand edits in the Abyssale editor. No style, industry, number of formats, subject type or advertising composition is prescribed; the product and the channel set the technical limits.
+Preserve artistic intent and intended use through an **editable, native structure** that survives new copy, new formats and later corrections. No style, industry, number of formats, subject type or advertising composition is prescribed; the product and the channel set the technical limits.
 
 ## 0. Identify the runtime first
 
@@ -30,7 +30,7 @@ Rule of thumb: **Codex makes images with ImageGen; Claude makes images with Abys
 | Layer types, typography, rotation, Button, markup, SVG lettering | [Layers and text](references/native-layers.md) |
 | JSON, tools, fonts, uploads, tracking, troubleshooting | [Import and MCP](references/import-and-mcp.md) |
 | Rating, Illustration, Video, Audio, animation | [Specialized layers](references/specialized-layers.md) |
-| Editor-only features | [Editor panels](references/editor-panels.md) |
+| Settings not available through the MCP | [MCP limits](references/mcp-limits.md) |
 | Small working payloads | [Examples](references/examples.md) |
 
 Where a behavior isn't proven, the references say so ("check the render", "check after importing"). The import contract is Alpha: read tool schemas before first use, read `version` from `get_design_as_import` instead of assuming one, and re-check what the result depends on.
@@ -47,7 +47,7 @@ Identify objective, exact content, references, assets, formats, medium and expec
 | Format adaptation | Preserve invariants and recompose for the new formats |
 | Dynamic template | Separate fixed/variable content; plan long/short copy, languages, image swaps |
 
-Establish the output type: static, animated, print or multipage. Typographic, editorial or abstract visuals need no photo, cut-out or CTA. Before a structural change to an existing design, read its formats and its full export (take `.payload` from `get_design_as_import` and add a `target`). If the fix can be made in the editor, guide the user through it rather than re-importing. A re-import creates a new object; a generation override never modifies the saved design.
+Establish the output type: static, animated, print or multipage. Typographic, editorial or abstract visuals need no photo, cut-out or CTA. Before a structural change to an existing design, read its formats and its full export (take `.payload` from `get_design_as_import` and add a `target`). Then fix it through the MCP: change the exported JSON and re-import it as a new version (see §5). A re-import creates a new object; a generation override never modifies the saved design.
 
 ## 2. Define the visual target
 
@@ -101,14 +101,14 @@ With a shell, generate the payload with a script (template in [capabilities.md](
 
 - Resolve real font UUIDs and variants; add an explicit `target`.
 - Multi-format: key every `layout` and `properties` by format name; `default` only for shared values. Give hidden Text/Button layers a realistic box.
-- Import properties ≠ generation attributes ≠ UI controls.
+- Import properties ≠ generation attributes.
 - `validate_only` checks structure only — it does **not** fetch image URLs or resolve fonts.
 - Assets, in order: Abyssale-hosted URLs (reuse those returned by `get_design_as_import` or by a generation — no upload, and no risk of a site blocking Abyssale's fetcher) → public HTTPS (brand sites behind a WAF may return 502 to Abyssale) → data URI (base64, 100 KB max, read from the file by a tool — never typed) → local file upload, only if you can run the returned `upload_command` yourself. Never hand upload commands to the user.
 - Keep the `import_id`; imports are not idempotent. Read all warnings.
 - AI steps cost AI credits that vary by model: never estimate a cost in advance. Before more than a few AI calls, say how many you plan; afterwards report the credits actually used (`get_remaining_credits` before and after).
-- **The connector can't edit a design's content.** Every re-import creates a new design: validate the layout before the first import (a local mockup of every format is cheap), iterate cheaply with generation overrides, and name versions clearly. Once the final version is approved, offer to delete the drafts with `delete_design` — after the user confirms, as there is no undo — and to rename (`rename_design`) or move (`move_design`) the final design. The scratch design used for AI images can be kept for later tasks.
+- **The connector can't edit a design's content.** Every re-import creates a new design: validate the layout before the first import (a local mockup of every format is cheap), iterate cheaply with generation overrides, and name versions clearly. Once the final version is approved, offer to delete the drafts with `delete_design` — after the user confirms, as there is no undo — and to rename (`rename_design`) or move (`move_design`) the final design. A corrected version has a new ID: tell the user, since links or integrations using the old design must be updated. The scratch design used for AI images can be kept for later tasks.
 
-Editor-only features: see [editor panels](references/editor-panels.md). After any edit in the editor, save, then re-read the design.
+Some settings aren't available through the MCP ([MCP limits](references/mcp-limits.md)): say so instead of inventing a property.
 
 ## 6. Verify and deliver
 

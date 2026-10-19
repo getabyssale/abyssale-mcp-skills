@@ -12,7 +12,6 @@ Abyssale tools come from the connector (`https://mcp.abyssale.com/mcp`), with a 
 | Presigned S3 upload (`upload_command`) | works | blocked unless a workspace admin allowlists `https://production-templates-imports.s3.eu-west-1.amazonaws.com` (see the MCP overview docs) — try once, then fall back |
 | Download renders (`file.url`, S3 host) and view them with the image Read tool | works | often blocked (`cdn.abyssale.com` observed blocked); ask for a screenshot, never claim an inspection you did not do |
 | Local SVG/HTML preview | `pip install cairosvg`, or Playwright with the pre-installed Chromium | same if the package registry is reachable |
-| Editor UI | only with a browser-control tool (Claude in Chrome / built-in browser) | guide the user step by step, then re-read the design |
 
 Practical cautions:
 - Never print a base64 data URI to the console: the harness may try to parse it as an image. Print its length instead.

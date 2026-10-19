@@ -20,7 +20,7 @@ Follow the available ImageGen skill and built-in tool (if that skill requires th
 
 **When Abyssale's own AI is still the right choice in Codex:**
 - the AI step must run **at render time for every variation** (e.g. `remove_bg` on each product photo of a feed, `auto_focus` crops per image) → put the AI properties on the final design's image layer;
-- the user wants the image regenerable inside the Abyssale editor (Text to Image on the layer);
+- the image must be regenerable from the design itself (Text to Image on the layer);
 - the asset should live on Abyssale's storage without an upload step.
 In those cases the recipes in [runtime-claude.md](runtime-claude.md#scratch-design-ai-pipeline) apply (text to image, remove_bg, expand via `generate_banners_async`; async only; AI credits consumed).
 

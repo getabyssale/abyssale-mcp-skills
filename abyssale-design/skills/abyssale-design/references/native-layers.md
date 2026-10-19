@@ -1,21 +1,20 @@
 # Native layers, Button, and partial styles
 
-The contract is Alpha — read `version` from `get_design_as_import`. Editor-only options are listed in [editor panels](editor-panels.md); small working payloads are in [examples](examples.md). Composition choices are recommendations, not API constraints.
+The contract is Alpha — read `version` from `get_design_as_import`. Settings not available through the MCP are listed in [MCP limits](mcp-limits.md); small working payloads are in [examples](examples.md). Composition choices are recommendations, not API constraints.
 
-## Three surfaces, three checks
+## Import vs generation
 
-| Feature | Editor | JSON import | MCP generation |
-|---|---|---|---|
-| Structure, dimensions, formats | Layers and Format Manager | `formats/layers/layout/properties` | Creates neither layers nor formats |
-| Global background color | Format Background | `formats[].background_color` | `elements.root.background_color` |
-| Partially styled text | Canvas editing + selection | Markup in `payload` | Markup in `elements.name.payload` |
-| Weight/italics | Font variants | Numeric `font_weight` + global `font_style`; local italics via markup | Check exposed attributes and markup; do not invent generation `font_style` |
-| Text background/padding | Background, Highlight/Paragraph | Object/number `padding`, background options | String `background_padding`; separate contract |
-| Text fitting | Keep text size, Shrink to fit, Always fit | Initial `font_size` required, optional `min_font_size` | Documented options; verify availability on the design |
-| Button box and label | Two alignment sections | `alignment` + `text_align` | Do not assume interchangeability; read current attributes |
-| Button radius | Radius | Scalar `radius` | No documented radius override |
-| Stroke/shadow | Type-specific controls | `stroke`, `shadow` objects | Flattened fields such as `stroke_width`, `shadow_blur` |
-| Max lines, Balance text visually, Truncate text | Auto resize section | Editor only — no import keys | Documented for Text; verify actual support |
+| Feature | JSON import | MCP generation |
+|---|---|---|
+| Structure, dimensions, formats | `formats/layers/layout/properties` | Creates neither layers nor formats |
+| Global background color | `formats[].background_color` | `elements.root.background_color` |
+| Partially styled text | Markup in `payload` | Markup in `elements.name.payload` |
+| Weight/italics | Numeric `font_weight` + global `font_style`; local italics via markup | Check exposed attributes and markup; do not invent generation `font_style` |
+| Text background/padding | Object/number `padding`, background options | String `background_padding`; separate contract |
+| Text fitting | Initial `font_size` required, optional `min_font_size` | Documented options; verify availability on the design |
+| Button box and label | `alignment` + `text_align` | Do not assume interchangeability; read current attributes |
+| Button radius | Scalar `radius` | No documented radius override |
+| Stroke/shadow | `stroke`, `shadow` objects | Flattened fields such as `stroke_width`, `shadow_blur` |
 
 Sources: [Layers overview](https://developers.abyssale.com/rest-api/layers-overview), [Generation properties](https://developers.abyssale.com/rest-api/generation/element-properties), [Text import](https://developers.abyssale.com/rest-api/designs/import/layer-types/text), [Text generation](https://developers.abyssale.com/rest-api/generation/element-properties/text), [Button import](https://developers.abyssale.com/rest-api/designs/import/layer-types/button), [Button generation](https://developers.abyssale.com/rest-api/generation/element-properties/button).
 
@@ -29,16 +28,16 @@ Quick access: [layer type](#choosing-the-right-type), [typographic fidelity](#ma
 - **Shape:** independent background, exact circle, motif, or native geometry. Geometry uses `properties.shape`, not `properties.type`. Per-corner radius belongs to types that support it, not Button.
 - **Capsule behind a logo:** `rectangle` Shape, `background_color`, and sufficiently large `radius` for semicircular ends; separate logo above. Adapt radius to height or use an accepted large value, then check rendering. Preserve color, order, and dimensions during correction; neither SVG nor an empty Button is needed for this geometry.
 - **Custom shape beyond native capabilities:** path-based SVG in a separate Image layer, transparent outside the shape. Overlay it on the photograph and set visibility per format; follow [photo/shape/subject decomposition](visual-workflow.md#decorative-shapes-independent-of-photography).
-- **Image:** photography, texture, complex illustration, cutout asset. Import documents `fitting_type: "cover"|"fill"`; do not translate the UI label "contain" into an assumed JSON value. Consult filters and masks before use.
+- **Image:** photography, texture, complex illustration, cutout asset. Import accepts `fitting_type: "cover"|"fill"` only (no `contain`). Consult filters and masks before use.
 - **Logo:** supplied brand asset with simple framing. Use Image for masks or advanced fitting; do not invent equivalent Logo properties.
 - **Group:** independent objects that should move/be organized together. `layer_ids` references names at layer level. It is not a card with its own background/padding.
-- **Rating, QR Code, Illustration, Video, Audio:** prefer specialized types when relevant and read their references. For Rating, the four Illustration families, Video, Audio, and animation, see [specialized contracts](specialized-layers.md) and [editor-only features](editor-panels.md). Video/audio relate to animated designs.
+- **Rating, QR Code, Illustration, Video, Audio:** prefer specialized types when relevant and read their references. For Rating, the four Illustration families, Video, Audio, and animation, see [specialized contracts](specialized-layers.md) and [MCP limits](mcp-limits.md). Video/audio relate to animated designs.
 
 Sources: [Shape](https://developers.abyssale.com/rest-api/designs/import/layer-types/shape), [Image](https://developers.abyssale.com/rest-api/designs/import/layer-types/image), [Logo](https://developers.abyssale.com/rest-api/designs/import/layer-types/logo), [Group](https://developers.abyssale.com/rest-api/designs/import/layer-types/group), [Available types](https://developers.abyssale.com/rest-api/designs/import/layer-types/).
 
 ### Specialized layers
 
-The [specialized matrix](specialized-layers.md) covers library choices, Rating limits, Video/Audio contracts, and animation effects. The import contract has **11 layer types**. A **Custom HTML code** layer (animated designs) exists only in the editor and isn't exported; don't confuse it with `qrcode`.
+The [specialized matrix](specialized-layers.md) covers library choices, Rating limits, Video/Audio contracts, and animation effects. The import contract has **11 layer types**. A **Custom HTML code** layer (animated designs) isn't importable or exported; don't confuse it with `qrcode`.
 
 ## Alignment values
 
@@ -105,15 +104,7 @@ Additional source: [Adding a Button Layer](https://help.abyssale.com/en/articles
 
 ## Multiple styles in one text layer
 
-### In the editor
-
-1. Select the layer and **double-click the text on the canvas**.
-2. Select the desired characters. The panel changes to **Selected text**.
-3. Set Weight, Size, Color, Decoration, Char script, Kerning, or Background.
-4. Weight exposes the font's variants, such as **400-italic - Regular Italic**.
-5. Save, then check the render.
-
-Partial styles are set by selecting text on the canvas, not in the Content field. Tags belong in API/import payloads, not as literal editor-field input. [Help Center — markup](https://help.abyssale.com/en/articles/344945-using-markup-language-on-text-layers-in-abyssale).
+Partial styles are markup tags inside one Text layer's `payload` (import and generation). [Help Center — markup](https://help.abyssale.com/en/articles/344945-using-markup-language-on-text-layers-in-abyssale).
 
 ### Exact representation
 
@@ -151,7 +142,7 @@ This is a fragment, not a complete design payload. Similarly, a simple backgroun
 
 - Local sizes may disable auto resize (Help Center).
 - A partial background's color is in `bg`; its padding and radius are stored on the layer (`padding`, `background_radius`). Don't invent local `bg` parameters.
-- For editor-only properties ([list](editor-panels.md)), finalize them in the editor and tell the user what isn't exported. If standalone JSON is essential, use compatible native decomposition and explain the tradeoff.
+- For settings not available through the MCP ([list](mcp-limits.md)), say so; if a compatible native structure exists, use it and explain the tradeoff.
 - Split for independent placement, distinct animations, or a demonstrated limitation. Group when useful; do not turn all text into an image.
 
 ## Highly stylized SVG lettering
@@ -166,8 +157,8 @@ Keep the source SVG and exact transcription in deliverables. Explain that letter
 
 ## Text with backgrounds and constraints
 
-For a banner, compare Button with Text + `background_mode: "paragraph"` and `background_fill: "width"`. **Background → Paragraph → Fill entire width** removes horizontal padding and X offset; vertical padding and radius remain. [Full-width background](https://help.abyssale.com/en/articles/89590-apply-a-full-width-text-background).
+For a banner, compare Button with Text + `background_mode: "paragraph"` and `background_fill: "width"`. With `background_fill: "width"`, horizontal padding and X offset don't apply; vertical padding and radius remain. [Full-width background](https://help.abyssale.com/en/articles/89590-apply-a-full-width-text-background).
 
-Max lines, Balance text visually and Truncate text are editor-only settings, and `min_font_size` isn't exported (see [editor-only features](editor-panels.md)). Keep them in your source payload or notes, re-apply them after a re-import, and test longer text. [Auto Resize](https://help.abyssale.com/en/articles/92216-mastering-text-auto-resize-layout-harmony), [Export](https://developers.abyssale.com/rest-api/designs/as-import).
+Max lines, Balance text visually and Truncate text aren't available through the MCP, and `min_font_size` isn't exported (see [MCP limits](mcp-limits.md)). Keep `min_font_size` in your source payload, re-apply it when you re-import, and test longer text. [Auto Resize](https://help.abyssale.com/en/articles/92216-mastering-text-auto-resize-layout-harmony), [Export](https://developers.abyssale.com/rest-api/designs/as-import).
 
 Text side borders use an import `side_border` object and flattened generation properties. Do not confuse them with Button borders. [Side Border](https://help.abyssale.com/en/articles/546336-using-the-side-border-decoration-on-text-layers).
