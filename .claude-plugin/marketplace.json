@@ -7,9 +7,14 @@
   },
   "plugins": [
     {
+      "name": "abyssale-design",
+      "source": "./abyssale-design",
+      "description": "Create, adapt or fix editable Abyssale designs (static, animated, print, multipage) from a brief, a brand URL, a reference or an existing design."
+    },
+    {
       "name": "abyssale-import",
       "source": "./abyssale-import",
-      "description": "Import a design into Abyssale from a JSON payload, including uploading local image assets."
+      "description": "Import a design into Abyssale from a JSON payload, with images passed as URLs."
     },
     {
       "name": "figma-to-abyssale",
@@ -24,7 +29,7 @@
     {
       "name": "abyssale-variations",
       "source": "./abyssale-variations",
-      "description": "Generate multiple format/size/language variations or a video from one design."
+      "description": "Generate outputs from one design in several of its formats, languages or text variations, or a video/GIF/HTML5 from an animated design."
     },
     {
       "name": "abyssale-personalize",

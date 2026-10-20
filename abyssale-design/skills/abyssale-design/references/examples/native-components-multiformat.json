@@ -1,0 +1,224 @@
+{
+  "name": "Native components — button and rich text (example)",
+  "type": "static",
+  "target": {
+    "kind": "design",
+    "project_uuid": "<PROJECT_UUID>"
+  },
+  "formats": [
+    {
+      "name": "square-1200",
+      "width": 1200,
+      "height": 1200,
+      "background_color": "#F6F4EF"
+    },
+    {
+      "name": "portrait-900",
+      "width": 900,
+      "height": 1350,
+      "background_color": "#F6F4EF"
+    }
+  ],
+  "layers": [
+    {
+      "name": "accent_rule",
+      "type": "shape",
+      "layout": {
+        "square-1200": {
+          "x": 70,
+          "y": 60,
+          "width": 70,
+          "height": 8
+        },
+        "portrait-900": {
+          "x": 55,
+          "y": 60,
+          "width": 70,
+          "height": 8
+        }
+      },
+      "properties": {
+        "default": {
+          "background_color": "#007C70",
+          "radius": 4
+        }
+      }
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "layout": {
+        "square-1200": {
+          "x": 70,
+          "y": 100,
+          "width": 1060,
+          "height": 160
+        },
+        "portrait-900": {
+          "x": 55,
+          "y": 100,
+          "width": 790,
+          "height": 190
+        }
+      },
+      "properties": {
+        "default": {
+          "font": "<FONT_ID>",
+          "font_size": 64,
+          "color": "#152A35",
+          "font_weight": 700,
+          "text_align": "left",
+          "vertical_align": "top",
+          "line_height": 140,
+          "payload": "One design.\nEditable elements."
+        }
+      }
+    },
+    {
+      "name": "inline_styles",
+      "type": "text",
+      "layout": {
+        "square-1200": {
+          "x": 70,
+          "y": 300,
+          "width": 1060,
+          "height": 310
+        },
+        "portrait-900": {
+          "x": 55,
+          "y": 330,
+          "width": 790,
+          "height": 400
+        }
+      },
+      "properties": {
+        "default": {
+          "font": "<FONT_ID>",
+          "font_size": 44,
+          "color": "#152A35",
+          "font_weight": 400,
+          "text_align": "left",
+          "vertical_align": "top",
+          "line_height": 140,
+          "payload": "One word <c=#007C70><w=700>in color</w></c>, a single layer.\n<u>Underlined</u> · <s>Struck</s> · <d>Diagonal</d>\n<bg=#FFE4A3>Highlighted</bg> · <f=70%>Small</f> · café · m<sup>2</sup> · H<sub>2</sub>O"
+        }
+      }
+    },
+    {
+      "name": "badge_status",
+      "type": "button",
+      "layout": {
+        "square-1200": {
+          "x": 70,
+          "y": 660,
+          "width": 420,
+          "height": 95
+        },
+        "portrait-900": {
+          "x": 55,
+          "y": 790,
+          "width": 420,
+          "height": 95
+        }
+      },
+      "properties": {
+        "default": {
+          "font": "<FONT_ID>",
+          "font_size": 30,
+          "font_weight": 700,
+          "payload": "NEW",
+          "color": "#FFFFFF",
+          "background_color": "#007C70",
+          "padding": {
+            "vertical": 16,
+            "horizontal": 28
+          },
+          "radius": 48,
+          "alignment": "middle left",
+          "text_align": "center"
+        }
+      }
+    },
+    {
+      "name": "label_info",
+      "type": "button",
+      "layout": {
+        "square-1200": {
+          "x": 520,
+          "y": 660,
+          "width": 610,
+          "height": 95
+        },
+        "portrait-900": {
+          "x": 55,
+          "y": 920,
+          "width": 790,
+          "height": 95
+        }
+      },
+      "properties": {
+        "default": {
+          "font": "<FONT_ID>",
+          "font_size": 30,
+          "font_weight": 500,
+          "payload": "Native label",
+          "color": "#152A35",
+          "background_color": "#E4E9EB",
+          "padding": {
+            "vertical": 16,
+            "horizontal": 24
+          },
+          "radius": 12,
+          "alignment": "middle left",
+          "text_align": "left"
+        }
+      }
+    },
+    {
+      "name": "callout",
+      "type": "button",
+      "layout": {
+        "square-1200": {
+          "x": 70,
+          "y": 805,
+          "width": 1060,
+          "height": 220
+        },
+        "portrait-900": {
+          "x": 55,
+          "y": 1055,
+          "width": 790,
+          "height": 195
+        }
+      },
+      "properties": {
+        "default": {
+          "font": "<FONT_ID>",
+          "font_size": 32,
+          "font_weight": 400,
+          "payload": "Text + background + padding\nAn easy-to-edit component",
+          "color": "#152A35",
+          "background_color": "#FFE4A3",
+          "padding": {
+            "vertical": 24,
+            "horizontal": 32
+          },
+          "radius": 20,
+          "alignment": "top left",
+          "text_align": "left",
+          "line_height": 135,
+          "stroke": {
+            "color": "#E48D33",
+            "width": 2
+          },
+          "shadow": {
+            "color": "#152A3520",
+            "blur": 8,
+            "offset_x": 0,
+            "offset_y": 6
+          }
+        }
+      }
+    }
+  ]
+}

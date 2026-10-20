@@ -1,0 +1,84 @@
+{
+  "target": {
+    "kind": "design",
+    "project_uuid": "<PROJECT_UUID>"
+  },
+  "name": "Auto-layout + min_font_size control",
+  "type": "static",
+  "formats": [
+    {
+      "name": "landscape",
+      "width": 1200,
+      "height": 628,
+      "background_color": "#EFE6DF"
+    }
+  ],
+  "layers": [
+    {
+      "name": "headline",
+      "type": "text",
+      "layout": {
+        "x": 48,
+        "y": 60,
+        "width": 560,
+        "height": 200
+      },
+      "properties": {
+        "payload": "A short headline",
+        "font": "<FONT_ID>",
+        "font_weight": 700,
+        "color": "#191A51",
+        "font_size": 64,
+        "min_font_size": 32,
+        "line_height": 112,
+        "text_align": "left",
+        "vertical_align": "top"
+      }
+    },
+    {
+      "name": "cta",
+      "type": "button",
+      "layout": {
+        "x": 48,
+        "y": 330,
+        "width": 400,
+        "height": 80
+      },
+      "properties": {
+        "payload": "Button",
+        "font": "<FONT_ID>",
+        "font_weight": 700,
+        "color": "#FFFFFF",
+        "background_color": "#191A51",
+        "font_size": 26,
+        "radius": 999,
+        "padding": {
+          "vertical": 20,
+          "horizontal": 40
+        },
+        "alignment": "middle left",
+        "text_align": "center"
+      }
+    },
+    {
+      "name": "stack",
+      "type": "group",
+      "layer_ids": [
+        "cta",
+        "headline"
+      ],
+      "layout": {
+        "x": 48,
+        "y": 60,
+        "width": 560,
+        "height": 360
+      },
+      "properties": {
+        "auto_layout": true,
+        "direction": "vertical",
+        "gap": 24,
+        "alignment": "top left"
+      }
+    }
+  ]
+}

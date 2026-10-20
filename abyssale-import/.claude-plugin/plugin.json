@@ -1,5 +1,5 @@
 {
   "name": "abyssale-import",
-  "description": "Import a design into Abyssale from a JSON payload, including uploading local image assets.",
+  "description": "Import a design into Abyssale from a JSON payload, with images passed as URLs.",
   "version": "1.0.0"
 }
