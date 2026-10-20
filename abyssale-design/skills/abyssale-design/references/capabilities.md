@@ -34,7 +34,7 @@ Behavior:
 - Not allowed on groups: `padding`, `opacity`, `rotation`, `background_color` (→ `unknown_field`); auto-layout is rejected on **animated** designs.
 
 ### Variable text must be allowed to shrink
-A text that doesn't fit its box at its `font_size` can only shrink down to `min_font_size`. Set `min_font_size` (import) on every variable text so longer copy shrinks to fit, then test a long variant. `min_font_size` isn't exported by `get_design_as_import` — keep it in your source.
+A text that doesn't fit its box at its `font_size` can only shrink down to `min_font_size`. Set `min_font_size` (import) on every variable text so longer copy shrinks to fit, then test a long variant.
 
 ## Native catalog
 
@@ -51,7 +51,7 @@ A text that doesn't fit its box at its `font_size` can only shrink down to `min_
 
 **Image** (import): `src`, `fitting_type` cover|fill, `alignment` (9-grid or custom) + `position_offset_x/y` (−0.5..0.5), `zoom` 1–20, `opacity`, `rotation`, `mask_name` (circle, rounded_corners+`mask_properties.radius`, blob, squircle, pentagon, hexagon, parallelogram, window), `filter_name` grayscale|duotone + `filter_properties.name` (blue_green, blue_orange, deep_green_light_green, BrightRed_light_yellow, brown_pale_green, brown_beige, deep_blue_green, deep_blue_red, deep_purple_orange, deep_purple_beige, deep_purple_pale_green, deep_blue_pale_green), `overlay {direction,color_1,color_2}`, `shadow`, `remove_bg` (+`remove_bg_properties`) at import.
 
-**Image AI at generation time** (recipes in runtime-claude.md, scratch-design pipeline; costs AI credits): `text_to_image` / `text_to_image_properties {prompt (≥3 words), model (default nano-banana-2; current list and ratios: [Image generation properties](https://developers.abyssale.com/rest-api/generation/element-properties/image)), ratio, quality, inpaint_images}` — **async only** (sync returns 400). `expand` (outpainting; ignored with cover; async only). `remove_bg` (models bria-rmbg-2-0, birefnet, pixelcut, imageUtils, ideogram; async recommended). `auto_focus` (generic/people, framing, zoom, target; sync OK). Use these via `generate_banners_async` — on a scratch design to produce assets (Claude), or ImageGen for one-off assets (Codex), or directly on the final design's image layer when the AI step must re-run for every variation.
+**Image AI at generation time** (recipes in runtime-claude.md, scratch-design pipeline; costs AI credits): `text_to_image` / `text_to_image_properties {prompt (≥3 words), model (default nano-banana-2; current list and ratios: [Image generation properties](https://developers.abyssale.com/rest-api/generation/element-properties/image)), ratio, quality, inpaint_images}` — **async only** (`generate_static_banner` rejects it — use `generate_banners_async`). `expand` (outpainting; ignored with cover; async only). `remove_bg` (models bria-rmbg-2-0, birefnet, pixelcut, imageUtils, ideogram; async recommended). `auto_focus` (generic/people, framing, zoom, target; sync OK). Use these via `generate_banners_async` — on a scratch design to produce assets (Claude), or ImageGen for one-off assets (Codex), or directly on the final design's image layer when the AI step must re-run for every variation.
 
 **Illustration layers**:
 ```json

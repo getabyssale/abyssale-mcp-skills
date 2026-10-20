@@ -159,6 +159,6 @@ Keep the source SVG and exact transcription in deliverables. Explain that letter
 
 For a banner, compare Button with Text + `background_mode: "paragraph"` and `background_fill: "width"`. With `background_fill: "width"`, horizontal padding and X offset don't apply; vertical padding and radius remain. [Full-width background](https://help.abyssale.com/en/articles/89590-apply-a-full-width-text-background).
 
-Max lines, Balance text visually and Truncate text aren't available through the MCP, and `min_font_size` isn't exported (see [MCP limits](mcp-limits.md)). Keep `min_font_size` in your source payload, re-apply it when you re-import, and test longer text. [Auto Resize](https://help.abyssale.com/en/articles/92216-mastering-text-auto-resize-layout-harmony), [Export](https://developers.abyssale.com/rest-api/designs/as-import).
+Max lines, Balance text visually and Truncate text aren't available through the MCP (see [MCP limits](mcp-limits.md)); control fitting with `min_font_size` and a realistic box, and test longer text. [Auto Resize](https://help.abyssale.com/en/articles/92216-mastering-text-auto-resize-layout-harmony), [Export](https://developers.abyssale.com/rest-api/designs/as-import).
 
 Text side borders use an import `side_border` object and flattened generation properties. Do not confuse them with Button borders. [Side Border](https://help.abyssale.com/en/articles/546336-using-the-side-border-decoration-on-text-layers).

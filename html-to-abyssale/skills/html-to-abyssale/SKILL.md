@@ -118,7 +118,9 @@ shrink. Check buttons near a canvas edge or another element on the first render.
    the real import (`validate_only` doesn't resolve fonts).
 
 5. **Validate, then import for real**: `import_design_from_json(validate_only: true)`
-   first, fix schema errors, then `validate_only: false`. A clean `validate_only`
+   first, fix schema errors, then `validate_only: false`. An error returned by the call
+   itself (no `import_id`, e.g. `unknown_font`, `unreachable_src`) means nothing was
+   created: fix the payload and submit again. A clean `validate_only`
    creates nothing and doesn't check fonts, image URLs or the project — only the real
    import's `warnings` array surfaces a font-weight substitution or a text that didn't
    fit (`text_fit_failed`; pass `strict: true` to make that a failure instead). The real

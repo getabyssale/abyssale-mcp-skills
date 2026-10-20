@@ -9,7 +9,7 @@ This is "mail merge" for creatives: one existing Abyssale design, one row of dat
 
 ## Prerequisites
 
-The Abyssale MCP server must be connected with the `generate:banner` and `read:design` scopes.
+The Abyssale MCP server must be connected with the `generate:banner` and `read:design` scopes, plus `read:font` to look up fonts with `list_fonts`.
 
 Not for `printer_multipage` designs — those use `abyssale-print-catalog` instead, with a different addressing scheme (pages, not per-row elements).
 

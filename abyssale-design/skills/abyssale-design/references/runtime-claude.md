@@ -36,7 +36,7 @@ Abyssale's image AI runs at generation time on an image layer. To produce standa
 
 **1. Reuse or create the scratch design.** `search_designs` for `SCRATCH ai-assets` in the project; otherwise import once (no upload needed) — full payload in [examples/scratch-ai-design.json](examples/scratch-ai-design.json): one Image layer `img` filling formats `sq` 1024×1024, `wide` 1600×900, `tall` 900×1600, all with background `#FFFFFF00`. The transparent background plus `image_file_type: "png"` makes cut-outs come back with a real alpha channel.
 
-**2. Run one AI step per call** with `generate_banners_async(design_id, template_format_names=["sq"], image_file_type="png", elements={"img": {…}})` (text to image is rejected by the synchronous tool). The output is `banners[0].file.url` on Abyssale's S3.
+**2. Run one AI step per call** with `generate_banners_async(design_id, template_format_names=["sq"], image_file_type="png", elements={"img": {…}})` (text to image only works with `generate_banners_async`). The output is `banners[0].file.url` on Abyssale's S3.
 
 | Goal | `elements.img` |
 |---|---|

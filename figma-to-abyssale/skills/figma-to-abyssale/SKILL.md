@@ -10,11 +10,16 @@ as native Abyssale layers (text/shape/image), decomposed element-by-element rath
 flattened into one screenshot — unless the source itself is already a single flattened
 image (see "When NOT to decompose" below).
 
-## 0. Tools available (exactly 2, no more)
+## 0. Figma tools
 
-This uses the community "Framelink" MCP (`figma-developer-mcp`, GitHub `GLips/Figma-Context-MCP`).
-Verified by reading its source (`src/services/figma.ts`): it is a **pure passthrough** to the
-official Figma REST API (`https://api.figma.com/v1`) — no extra logic, no extra endpoints.
+This skill needs a Figma MCP server that can (1) return a node's structure and styles and
+(2) export a node as an image. Use whichever Figma tools are connected — Figma's official
+MCP server or the community "Framelink" server — and check their names with tool search. If
+none is connected, say so and stop.
+
+The steps below name the Framelink tools; with another Figma MCP, use its equivalent tools
+for the same two jobs. Framelink (`figma-developer-mcp`, GitHub `GLips/Figma-Context-MCP`) is
+a passthrough to the Figma REST API (`https://api.figma.com/v1`):
 
 - `mcp__figma__get_figma_data(fileKey, nodeId?, depth?)` → calls `GET /files/:key` or
   `GET /files/:key/nodes?ids=...`. Returns a simplified but **style-complete** tree:
@@ -27,7 +32,7 @@ official Figma REST API (`https://api.figma.com/v1`) — no extra logic, no extr
   `imageRef` (from a node's `fills[].imageRef`) is required for image-fill rectangles;
   omit it for vector/SVG nodes (auto-detected). `pngScale` controls real resolution.
 
-Install (if not already connected): `claude mcp add figma -e FIGMA_API_KEY=<token> -- npx -y figma-developer-mcp --stdio`.
+Install Framelink (if you use it and it isn't connected): `claude mcp add figma -e FIGMA_API_KEY=<token> -- npx -y figma-developer-mcp --stdio`.
 Token needs the **"File content: Read"** scope (Figma → Settings → Personal access tokens).
 Wrong scope (e.g. only `file_dev_resources`) → `403 Invalid scope(s)... requires file_content:read`.
 A newly-added MCP server needs a session restart before its tools show up via ToolSearch.
@@ -225,7 +230,7 @@ the actual design content. Don't rely on it to verify a design. Always use
 5. Build the `import_design_from_json` payload (`name`, `type`, `target.project_uuid` from `list_projects`/`create_project`, `formats`, `layers`). Start from `get_design_import_example` for the exact shape.
 6. `import_design_from_json(validate_only: true)` — fix any schema errors (see §7), repeat until clean. A clean result creates nothing and doesn't check fonts, image URLs or the project.
 7. `import_design_from_json(validate_only: false)`. Images: an image `src` given as a public HTTPS URL (or a `data:` URI of at most 100 KB) needs no upload — the call waits up to ~60 s and usually returns `DONE` or `FAILED` directly. The downloaded Figma assets are local files, so with a bare filename `src` it returns `WAITING_FOR_VALIDATION` with one upload command (curl) **per image layer**, only in this first response (status checks never repeat them). Each has a **unique** `policy` + `signature` — never reuse one file's signature for another file. Run each one yourself, verbatim except for `<LOCAL_FILE_PATH>` (don't reorder its fields), within one hour; never ask the user to run them. Every format of a layer must use the same file. (Claude.ai additionally needs the Abyssale upload bucket on its domain allowlist — see the MCP overview docs.)
-8. If the import isn't finalized yet, call `check_design_import_status(import_id)` (after uploads, this call is what starts processing) until `DONE` → `result.uuid` is the new Abyssale design id; check `warnings` (e.g. `text_fit_failed`, `font_weight_adjusted`). `QUEUED`/`PROCESSING` are normal; `FAILED` is final — read `error`. Usually 1-2 checks with a few seconds' wait are enough; don't poll indefinitely.
+8. If the call itself returns an error (no `import_id`, e.g. `invalid_payload`, `unknown_font`, `unreachable_src`), nothing was created: fix the payload and submit again. If the import isn't finalized yet, call `check_design_import_status(import_id)` (after uploads, this call is what starts processing) until `DONE` → `result.uuid` is the new Abyssale design id; check `warnings` (e.g. `text_fit_failed`, `font_weight_adjusted`). `QUEUED`/`PROCESSING` are normal; `FAILED` is final — read `error`. Usually 1-2 checks with a few seconds' wait are enough; don't poll indefinitely.
 9. `generate_static_banner(design_id, template_format_name)` (this spends credits) → download the rendered image and `Read` it to visually QA against the Figma source before reporting back.
 10. Report to the user: what got natively decomposed vs. what got flattened to an image (and why), plus any visual defects spotted in the render.
 

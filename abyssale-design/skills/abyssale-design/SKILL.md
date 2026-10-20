@@ -7,6 +7,10 @@ description: "Create, reproduce, adapt or fix editable designs in Abyssale throu
 
 Preserve artistic intent and intended use through an **editable, native structure** that survives new copy, new formats and later corrections. No style, industry, number of formats, subject type or advertising composition is prescribed; the product and the channel set the technical limits.
 
+## Scopes
+
+The Abyssale MCP server must be connected with the scopes for the tools you use: `read:design`, `read:project`, `read:font`, `import:design` and `generate:banner`; `read:credits` to report credits; `write:project` to create a project; `write:design` to rename or move a design; `delete:design` to delete drafts. If a call fails with an insufficient-scope error, tell the user to reconnect the connector and grant that scope.
+
 ## 0. Identify the runtime first
 
 This skill is shared by several agents. The Abyssale contract is the same for all of them; what differs is how images are produced, how files move and how renders are inspected.

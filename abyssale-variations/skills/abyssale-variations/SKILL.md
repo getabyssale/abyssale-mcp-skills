@@ -19,7 +19,7 @@ Note: `printer_multipage` designs are a different design type and are out of sco
 
 ## Prerequisites
 
-The Abyssale MCP server must be connected with the `generate:banner` and `read:design` scopes.
+The Abyssale MCP server must be connected with the `generate:banner` and `read:design` scopes, plus `read:font` to look up fonts with `list_fonts`.
 
 ## Steps
 

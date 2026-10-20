@@ -41,7 +41,7 @@ Source: [Fonts](https://developers.abyssale.com/rest-api/fonts) and the current 
 
 For `static`, `animated`, and `printer`, declare `formats[]` and a shared `layers[]` list. `printer_multipage` uses global print settings and `pages[]`; do not apply this structure to it. Start from the official example for the chosen type and current contract. For print, read units, physical dimensions, DPI, bleed/safe areas, and output settings; do not copy static-example pixel coordinates as print specifications. Validate printer and multipage designs on the real deliverable before delivery.
 
-For a design, provide `target: {"kind":"design","project_uuid":"…"}` with an actually selected UUID. For a workspace template, use `target: {"kind":"workspace_template"}` without a project; it must later become a design before generation. Do not implicitly reuse an example's destination.
+For a design, provide `target: {"kind":"design","project_uuid":"…"}` with an actually selected UUID. Always import as a design: a workspace template can't be found, rendered, renamed or deleted through the MCP afterwards. Do not implicitly reuse an example's destination.
 
 Each layer has `name`, `type`, `layout`, and `properties`. Layout uses `x`, `y`, `width`, `height`, top-left origin; integer pixels for static/animated. With multiple formats, **every `layout` and `properties` is keyed by format name**. `default` contains shared values merged underneath format-specific ones. Check each format's effective merged result, particularly all four coordinates and font size. Single-format flat structures do not prove compatibility with a later second format. Text and Button require initial import `font_size`; fitting may change rendered size. Respect type requirements, including after merging `default`.
 
@@ -110,10 +110,11 @@ Read the whole connector response — both `structuredContent` and `content`. If
 
 | Returned state | Action |
 |---|---|
+| The call returns an error, no `import_id` (`invalid_payload`, `unknown_font`, `unreachable_src`, `unsupported_for_type`, `out_of_range`…) | Nothing was created: fix the payload at the returned path and submit again |
 | `WAITING_FOR_VALIDATION` | Finish requested uploads, then call `check_design_import_status` |
 | `QUEUED` / `PROCESSING` | Wait and resume tracking; do not create again |
 | `DONE`, finalized | Read `result.uuid`, `result.kind`, and all warnings |
-| `FAILED`, finalized | Read the error; fix its cause before a justified retry |
+| `FAILED`, finalized | The import was accepted but failed while building (e.g. text fit with `strict`); read the error and fix its cause before a new import |
 
 MCP may wait roughly 60 seconds and return the result directly, or return an identifier to track. Use `wait_for_result: false` for obviously long work; avoid tight polling. After uploads, `check_design_import_status` continues the import. Presigned uploads expire: read returned deadlines and do not reuse expired URLs.
 
